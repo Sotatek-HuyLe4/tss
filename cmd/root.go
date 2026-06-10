@@ -1,9 +1,10 @@
 package cmd
 
 import (
-	"github.com/ipfs/go-log"
 	"os"
 	"path"
+
+	"github.com/ipfs/go-log"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

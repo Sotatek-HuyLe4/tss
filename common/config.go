@@ -185,3 +185,11 @@ func ReadConfigFromHome(v *viper.Viper, init bool, home, vault, passphrase strin
 	TssCfg = config
 	return nil
 }
+
+func PrintConfig(config TssConfig) {
+	jsonConfig, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		Panic(err)
+	}
+	fmt.Printf("config: %s\n", string(jsonConfig))
+}
