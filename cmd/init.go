@@ -4,12 +4,13 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/libp2p/go-libp2p"
-	"github.com/multiformats/go-multiaddr"
 	"io/ioutil"
 	"os"
 	"path"
 	"strings"
+
+	"github.com/libp2p/go-libp2p"
+	"github.com/multiformats/go-multiaddr"
 
 	"github.com/bgentry/speakeasy"
 	"github.com/libp2p/go-libp2p-core/crypto"
