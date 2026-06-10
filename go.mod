@@ -46,9 +46,8 @@ require (
 	github.com/tendermint/tendermint v0.32.2
 	github.com/whyrusleeping/go-logging v0.0.1 // indirect
 	go.opencensus.io v0.22.0 // indirect
-	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
-	golang.org/x/net v0.0.0-20191021144547-ec77196f6094 // indirect
-	golang.org/x/sys v0.0.0-20191026070338-33540a1f6037 // indirect
+	golang.org/x/crypto v0.22.0
+	golang.org/x/net v0.24.0 // indirect
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/yaml.v2 v2.2.4 // indirect
