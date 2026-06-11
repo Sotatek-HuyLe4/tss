@@ -68,7 +68,7 @@ var bootstrapCmd = &cobra.Command{
 		go acceptConnRoutine(listener, bootstrapper, done)
 
 		peerAddrs := findPeerAddrsViaSsdp(numOfPeers, listenAddrs)
-		client.Logger.Debugf("Found peers via ssdp: %v", peerAddrs)
+		client.Logger.Infof("Found peers via ssdp: %v", peerAddrs)
 
 		go func() {
 			for _, peerAddr := range peerAddrs {
@@ -195,6 +195,7 @@ func handleConnection(conn net.Conn, b *common.Bootstrapper) {
 func sendBootstrapMessage(conn net.Conn, msg *common.BootstrapMessage) {
 	// TODO: support ipv6
 	realIp := strings.SplitN(conn.LocalAddr().String(), ":", 2)
+	fmt.Printf("realIp: %v\n", realIp)
 	msgForConnect := common.BootstrapMessage{
 		ChannelId: msg.ChannelId,
 		PeerInfo:  msg.PeerInfo,
@@ -299,6 +300,9 @@ func updateConfigWithPeerInfos(bootstrapper *common.Bootstrapper) error {
 		common.TssCfg.ExpectedNewPeers,
 		newPeerAddrs,
 		expectedNewPeers)
+
+	client.Logger.Infof("Peer Addrs: %v", common.TssCfg.PeerAddrs)
+	client.Logger.Infof("Expected Peers: %v", common.TssCfg.ExpectedPeers)
 
 	return nil
 }

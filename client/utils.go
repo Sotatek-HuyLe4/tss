@@ -11,12 +11,13 @@ import (
 	"github.com/bnb-chain/tss-lib/v2/crypto/paillier"
 	"github.com/bnb-chain/tss-lib/v2/ecdsa/keygen"
 	"github.com/bnb-chain/tss-lib/v2/tss"
+	"github.com/bnb-chain/tss/common"
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcutil/bech32"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ripemd160"
 
-	"github.com/bnb-chain/tss/common"
+	evmCrypto "github.com/ethereum/go-ethereum/crypto"
 )
 
 func loadSavedKeyForSign(config *common.TssConfig, sortedIds tss.SortedPartyIDs, signers map[string]int) keygen.LocalPartySaveData {
@@ -136,4 +137,10 @@ func GetAddress(key ecdsa.PublicKey, prefix string) (string, error) {
 		return "", errors.Wrap(err, "encoding bech32 failed")
 	}
 	return bech32.Encode(prefix, converted)
+}
+
+func GetEvmAddress(pubkey ecdsa.PublicKey) string {
+	address := evmCrypto.PubkeyToAddress(pubkey)
+
+	return address.Hex()
 }
