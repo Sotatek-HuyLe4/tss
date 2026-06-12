@@ -79,6 +79,7 @@ func bindKdfConfigs() {
 
 func bindClientConfigs() {
 	initCmd.PersistentFlags().String("moniker", "", "moniker of current party")
+	initCmd.PersistentFlags().String("listen_port", "", "listen port of this party")
 	rootCmd.PersistentFlags().String(flagVault, "", "name of vault of this party")
 	keygenCmd.PersistentFlags().String(flagPrefix, "bnb", "prefix of bech32 address")
 	describeCmd.PersistentFlags().String(flagPrefix, "bnb", "prefix of bech32 address")
