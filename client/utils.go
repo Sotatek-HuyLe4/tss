@@ -28,6 +28,7 @@ func loadSavedKeyForSign(config *common.TssConfig, sortedIds tss.SortedPartyIDs,
 	filteredH1j := make([]*big.Int, 0)
 	filteredH2j := make([]*big.Int, 0)
 	filteredKs := make([]*big.Int, 0)
+
 	for _, partyId := range sortedIds {
 		keygenIdx := signers[partyId.Moniker]
 		filteredBigXj = append(filteredBigXj, result.BigXj[keygenIdx])
@@ -37,6 +38,7 @@ func loadSavedKeyForSign(config *common.TssConfig, sortedIds tss.SortedPartyIDs,
 		filteredH2j = append(filteredH2j, result.H2j[keygenIdx])
 		filteredKs = append(filteredKs, result.Ks[keygenIdx])
 	}
+	
 	filteredResult := keygen.LocalPartySaveData{
 		LocalPreParams: keygen.LocalPreParams{
 			PaillierSK: result.PaillierSK,
@@ -83,6 +85,7 @@ func loadSavedKey(config *common.TssConfig) keygen.LocalPartySaveData {
 		common.Panic(err)
 	}
 	defer wPriv.Close()
+
 	wPub, err := os.OpenFile(path.Join(config.Home, config.Vault, "pk.json"), os.O_RDONLY, 0400)
 	if err != nil {
 		common.Panic(err)
@@ -93,6 +96,7 @@ func loadSavedKey(config *common.TssConfig) keygen.LocalPartySaveData {
 	if err != nil {
 		common.Panic(err)
 	}
+
 	return *result
 }
 

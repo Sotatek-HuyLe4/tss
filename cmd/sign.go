@@ -1,11 +1,10 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-
 	"github.com/bnb-chain/tss/client"
 	"github.com/bnb-chain/tss/common"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 func init() {
@@ -22,6 +21,7 @@ var signCmd = &cobra.Command{
 		if err := common.ReadConfigFromHome(viper.GetViper(), false, viper.GetString(flagHome), vault, passphrase); err != nil {
 			common.Panic(err)
 		}
+
 		initLogLevel(common.TssCfg)
 	},
 	Run: func(cmd *cobra.Command, args []string) {

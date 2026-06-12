@@ -14,7 +14,6 @@ import (
 	"github.com/bnb-chain/tss-lib/v2/tss"
 	"github.com/bnb-chain/tss/common"
 	"github.com/bnb-chain/tss/p2p"
-	"github.com/btcsuite/btcd/btcec"
 	"github.com/ipfs/go-log"
 	"google.golang.org/protobuf/proto"
 
@@ -87,6 +86,7 @@ func NewTssClient(config *common.TssConfig, mode ClientMode, mock bool) *TssClie
 		if mode == RegroupMode {
 			common.TssCfg.BMode = common.RegroupMode
 		}
+
 		bootstrapper := common.NewBootstrapper(0, &common.TssCfg)
 		t := p2p.NewP2PTransporter(config.Home, config.Vault, config.Id.String(), bootstrapper, nil, nil, signers, &config.P2PConfig)
 		t.Shutdown()
@@ -104,6 +104,7 @@ func NewTssClient(config *common.TssConfig, mode ClientMode, mock bool) *TssClie
 					}
 				}
 			}
+
 			return true
 		})
 		if mode == SignMode || (mode == RegroupMode && common.TssCfg.IsOldCommittee) {
@@ -113,7 +114,8 @@ func NewTssClient(config *common.TssConfig, mode ClientMode, mock bool) *TssClie
 		if len(signers) < config.Threshold+1 {
 			common.Panic(fmt.Errorf("no enough signers (%d) to meet requirement: %d", len(signers), config.Threshold+1))
 		}
-		updatePeerOriginalIndexes(config, bootstrapper, partyID, signers)
+
+		updatePeerOriginalIndexes(config, partyID, signers)
 	}
 
 	if !mock {
@@ -186,14 +188,19 @@ func NewTssClient(config *common.TssConfig, mode ClientMode, mock bool) *TssClie
 		Logger.Infof("[%s] initialized localParty: %s", config.Moniker, localParty)
 	case SignMode:
 		key := loadSavedKeyForSign(config, sortedIds, signers)
-		pubKey := btcec.PublicKey(ecdsa.PublicKey{tss.EC(), key.ECDSAPub.X(), key.ECDSAPub.Y()})
-		Logger.Infof("[%s] public key: %X\n", config.Moniker, pubKey.SerializeCompressed())
-		address, err := GetAddress(ecdsa.PublicKey{tss.EC(), key.ECDSAPub.X(), key.ECDSAPub.Y()}, config.AddressPrefix)
-		if err != nil {
-			panic(err)
+		pubKey := ecdsa.PublicKey{
+			Curve: key.ECDSAPub.Curve(),
+			X:     key.ECDSAPub.X(),
+			Y:     key.ECDSAPub.Y(),
 		}
-		Logger.Debugf("[%s] address is: %s\n", config.Moniker, address)
-		params := tss.NewParameters(tss.EC(), p2pCtx, partyID, config.Parties, config.Threshold)
+		Logger.Infof("[%s] public key:\n", config.Moniker)
+		Logger.Infof("	X: %s\n", pubKey.X.String())
+		Logger.Infof("	Y: %s\n", pubKey.Y.String())
+
+		address := GetEvmAddress(pubKey)
+		Logger.Infof("[%s] evm address is: %s\n", config.Moniker, address)
+
+		params := tss.NewParameters(tss.S256(), p2pCtx, partyID, config.Parties, config.Threshold)
 		c.key = &key
 		c.params = params
 	case RegroupMode:
@@ -247,6 +254,7 @@ func (client *TssClient) Start() {
 		if !ok {
 			common.Panic(fmt.Errorf("message to be sign: %s is not a valid big.Int", client.config.Message))
 		}
+
 		client.signImpl(message)
 		time.Sleep(5 * time.Second)
 	default:
@@ -344,11 +352,13 @@ func (client *TssClient) saveDataRoutine(saveCh <-chan keygen.LocalPartySaveData
 			common.Panic(err)
 		}
 		defer wPriv.Close() // defer within loop is fine here as for one party there would be only one element from saveCh
+
 		wPub, err := os.OpenFile(path.Join(client.config.Home, client.config.Vault, "pk.json"), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 		if err != nil {
 			common.Panic(err)
 		}
 		defer wPub.Close() // defer within loop is fine here as for one party there would be only one element from saveCh
+
 		err = common.Save(&msg, client.transporter.NodeKey(), client.config.KDFConfig, client.config.Password, wPriv, wPub)
 		if err != nil {
 			common.Panic(err)
@@ -368,12 +378,13 @@ func (client *TssClient) saveSignatureRoutine(signCh <-chan lib.SignatureData, d
 			done <- true
 			close(done)
 		}
+		
 		break
 	}
 }
 
 // assign original keygen index to signers (old parties in regroup)
-func updatePeerOriginalIndexes(config *common.TssConfig, bootstrapper *common.Bootstrapper, partyID *tss.PartyID, signers map[string]int) {
+func updatePeerOriginalIndexes(config *common.TssConfig, partyID *tss.PartyID, signers map[string]int) {
 	allPartyIds := make(tss.UnSortedPartyIDs, 0, config.Parties) // all parties, used for calculating party's index during keygen
 	allPartyIds = append(allPartyIds, partyID)
 	for _, peer := range config.P2PConfig.ExpectedPeers {

@@ -65,7 +65,8 @@ func (client *TssClient) signImpl(m *big.Int) ([]byte, error) {
 	go client.saveSignatureRoutine(client.signCh, done)
 
 	<-done
-	Logger.Debugf("[%s] received signature: %X", client.config.Moniker, client.signature)
+	Logger.Infof("[%s] received signature: %X", client.config.Moniker, client.signature)
+
 	return client.signature, nil
 }
 
