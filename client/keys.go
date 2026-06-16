@@ -65,9 +65,16 @@ func (client *TssClient) signImpl(m *big.Int) ([]byte, error) {
 	go client.saveSignatureRoutine(client.signCh, done)
 
 	<-done
-	Logger.Infof("[%s] received signature: %X", client.config.Moniker, client.signature)
 
-	return client.signature, nil
+	signedTx, _ := AssembleSignedTx(common.TssCfg.SignConfig.Tx, common.TssCfg.SignConfig.Signer, &client.signature)
+	rawTx, err := signedTx.MarshalBinary()
+	if err != nil {
+		common.Panic(err)
+	}
+
+	Logger.Infof("[%s] signed tx: %s\n", client.config.Moniker, hex.EncodeToString(rawTx))
+
+	return rawTx, nil
 }
 
 // This helper method is used by PubKey interface in keys.go

@@ -14,9 +14,12 @@ import (
 	"github.com/bnb-chain/tss/common"
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcutil/bech32"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ripemd160"
 
+	tsscommon "github.com/bnb-chain/tss-lib/v2/common"
+	evmCommon "github.com/ethereum/go-ethereum/common"
 	evmCrypto "github.com/ethereum/go-ethereum/crypto"
 )
 
@@ -38,7 +41,7 @@ func loadSavedKeyForSign(config *common.TssConfig, sortedIds tss.SortedPartyIDs,
 		filteredH2j = append(filteredH2j, result.H2j[keygenIdx])
 		filteredKs = append(filteredKs, result.Ks[keygenIdx])
 	}
-	
+
 	filteredResult := keygen.LocalPartySaveData{
 		LocalPreParams: keygen.LocalPreParams{
 			PaillierSK: result.PaillierSK,
@@ -147,4 +150,38 @@ func GetEvmAddress(pubkey ecdsa.PublicKey) string {
 	address := evmCrypto.PubkeyToAddress(pubkey)
 
 	return address.Hex()
+}
+
+func AssembleSignedTx(
+	tx *types.Transaction,
+	signer types.Signer,
+	sigData *tsscommon.SignatureData,
+) (*types.Transaction, evmCommon.Address) {
+	sig := make([]byte, 65)
+	copy(sig[0:32], padTo32(sigData.R))
+	copy(sig[32:64], padTo32(sigData.S))
+	sig[64] = sigData.SignatureRecovery[0]
+
+	signedTx, err := tx.WithSignature(signer, sig)
+	if err != nil {
+		common.Panic(err)
+	}
+
+	sender, err := types.Sender(signer, signedTx)
+	if err != nil {
+		common.Panic(err)
+	}
+
+	return signedTx, sender
+}
+
+func padTo32(b []byte) []byte {
+	if len(b) >= 32 {
+		return b[len(b)-32:]
+	}
+
+	out := make([]byte, 32)
+	copy(out[32-len(b):], b)
+
+	return out
 }

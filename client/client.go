@@ -18,6 +18,8 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	lib "github.com/bnb-chain/tss-lib/v2/common"
+	tsscommon "github.com/bnb-chain/tss-lib/v2/common"
+	ethCommon "github.com/ethereum/go-ethereum/common"
 )
 
 var Logger = log.Logger("tss")
@@ -53,7 +55,7 @@ type TssClient struct {
 	regroupParams *tss.ReSharingParameters
 	idToPartyIds  map[string]*tss.PartyID
 	key           *keygen.LocalPartySaveData
-	signature     []byte
+	signature     tsscommon.SignatureData
 
 	saveCh chan keygen.LocalPartySaveData
 	signCh chan lib.SignatureData
@@ -193,9 +195,6 @@ func NewTssClient(config *common.TssConfig, mode ClientMode, mock bool) *TssClie
 			X:     key.ECDSAPub.X(),
 			Y:     key.ECDSAPub.Y(),
 		}
-		Logger.Infof("[%s] public key:\n", config.Moniker)
-		Logger.Infof("	X: %s\n", pubKey.X.String())
-		Logger.Infof("	Y: %s\n", pubKey.Y.String())
 
 		address := GetEvmAddress(pubKey)
 		Logger.Infof("[%s] evm address is: %s\n", config.Moniker, address)
@@ -250,10 +249,8 @@ func NewTssClient(config *common.TssConfig, mode ClientMode, mock bool) *TssClie
 func (client *TssClient) Start() {
 	switch client.mode {
 	case SignMode:
-		message, ok := big.NewInt(0).SetString(client.config.Message, 10)
-		if !ok {
-			common.Panic(fmt.Errorf("message to be sign: %s is not a valid big.Int", client.config.Message))
-		}
+		txHash := ethCommon.HexToHash(client.config.Message)
+		message := new(big.Int).SetBytes(txHash.Bytes())
 
 		client.signImpl(message)
 		time.Sleep(5 * time.Second)
@@ -373,12 +370,12 @@ func (client *TssClient) saveDataRoutine(saveCh <-chan keygen.LocalPartySaveData
 
 func (client *TssClient) saveSignatureRoutine(signCh <-chan lib.SignatureData, done chan<- bool) {
 	for signature := range signCh {
-		client.signature = signature.Signature
+		client.signature = signature
 		if done != nil {
 			done <- true
 			close(done)
 		}
-		
+
 		break
 	}
 }

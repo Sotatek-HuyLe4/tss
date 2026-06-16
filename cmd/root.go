@@ -47,6 +47,7 @@ func initConfigAndLogLevel() {
 	bindP2pConfigs()
 	bindKdfConfigs()
 	bindClientConfigs()
+	bindSignCmd()
 
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -111,6 +112,12 @@ func bindClientConfigs() {
 	regroupCmd.PersistentFlags().Bool("is_old", false, "whether this party is an old committee. If it is set to true, it will participant signing in regroup. There should be only t+1 parties set this to true for one regroup")
 	regroupCmd.PersistentFlags().Bool("is_new_member", false, "whether this party is new committee, for new party it will changed to true automatically. if an old party set this to true, its share will be replaced by one generated one")
 	regroupCmd.PersistentFlags().String("pubkey", "", "only set via parent process")
+}
+
+func bindSignCmd() {
+	signCmd.PersistentFlags().String("rpc_url", "http://localhost:8545", "rpc url of the network to sign the transaction")
+	signCmd.PersistentFlags().String("to_address", "", "address of the recipient of the transaction")
+	signCmd.PersistentFlags().String("amount", "1", "amount of the transaction")
 }
 
 func initLogLevel(cfg common.TssConfig) {

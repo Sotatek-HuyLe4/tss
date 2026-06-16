@@ -11,6 +11,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/mitchellh/mapstructure"
 	"github.com/multiformats/go-multiaddr"
 	"github.com/spf13/viper"
@@ -74,15 +75,22 @@ func DefaultKDFConfig() KDFConfig {
 	}
 }
 
+type SignConfig struct {
+	Tx     *types.Transaction `json:"tx"`
+	Signer types.Signer       `json:"signer"`
+}
+
 type TssConfig struct {
 	P2PConfig `mapstructure:"p2p" json:"p2p"`
 	KDFConfig `mapstructure:"kdf" json:"-"` // kdf config will be persistent together with cryptoJSON,
 	// no need to keep it in config file
 
+	SignConfig SignConfig `json:"sign_config"`
+
 	Id            TssClientId
 	Moniker       string
-	Vault         string `mapstructure:"vault_name" json:"vault_name"` // subdir within home to indicate alias of different vaults (addresses)
-	AddressPrefix string `mapstructure:"address_prefix" json:"address_prefix"`      //
+	Vault         string `mapstructure:"vault_name" json:"vault_name"`         // subdir within home to indicate alias of different vaults (addresses)
+	AddressPrefix string `mapstructure:"address_prefix" json:"address_prefix"` //
 
 	Threshold    int
 	Parties      int
