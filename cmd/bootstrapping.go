@@ -303,6 +303,8 @@ func updateConfigWithPeerInfos(bootstrapper *common.Bootstrapper) error {
 
 	client.Logger.Infof("Peer Addrs: %v", common.TssCfg.PeerAddrs)
 	client.Logger.Infof("Expected Peers: %v", common.TssCfg.ExpectedPeers)
+	client.Logger.Infof("New Peer Addrs: %v", common.TssCfg.NewPeerAddrs)
+	client.Logger.Infof("Expected New Peers: %v", common.TssCfg.ExpectedNewPeers)
 
 	return nil
 }

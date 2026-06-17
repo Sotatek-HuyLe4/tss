@@ -137,6 +137,7 @@ func NewTssClient(config *common.TssConfig, mode ClientMode, mock bool) *TssClie
 			idToPartyIds[id] = partyId
 			unsortedPartyIds = append(unsortedPartyIds, partyId)
 		}
+
 		if mode == RegroupMode {
 			for _, peer := range config.P2PConfig.ExpectedNewPeers {
 				id := string(p2p.GetClientIdFromExpectedPeers(peer))
@@ -151,6 +152,7 @@ func NewTssClient(config *common.TssConfig, mode ClientMode, mock bool) *TssClie
 					unsortedNewPartyIds = append(unsortedNewPartyIds, partyId)
 				}
 			}
+
 			if !config.IsOldCommittee {
 				unsortedNewPartyIds = append(unsortedNewPartyIds, partyID)
 			}
@@ -165,6 +167,7 @@ func NewTssClient(config *common.TssConfig, mode ClientMode, mock bool) *TssClie
 			}
 		}
 	}
+
 	sortedIds := tss.SortPartyIDs(unsortedPartyIds)
 	p2pCtx := tss.NewPeerContext(sortedIds)
 	saveCh := make(chan keygen.LocalPartySaveData)
@@ -206,7 +209,7 @@ func NewTssClient(config *common.TssConfig, mode ClientMode, mock bool) *TssClie
 		sortedNewIds := tss.SortPartyIDs(unsortedNewPartyIds)
 		newP2pCtx := tss.NewPeerContext(sortedNewIds)
 		params := tss.NewReSharingParameters(
-			tss.EC(),
+			tss.S256(),
 			p2pCtx,
 			newP2pCtx,
 			partyID,
