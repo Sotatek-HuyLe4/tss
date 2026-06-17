@@ -9,12 +9,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-
 	"github.com/bnb-chain/tss/client"
 	"github.com/bnb-chain/tss/common"
 	"github.com/bnb-chain/tss/p2p"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 func init() {
@@ -31,6 +30,7 @@ var regroupCmd = &cobra.Command{
 		if err := common.ReadConfigFromHome(viper.GetViper(), false, viper.GetString(flagHome), vault, passphrase); err != nil {
 			common.Panic(err)
 		}
+
 		initLogLevel(common.TssCfg)
 	},
 	Run: func(cmd *cobra.Command, args []string) {

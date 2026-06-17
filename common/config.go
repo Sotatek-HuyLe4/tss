@@ -92,10 +92,10 @@ type TssConfig struct {
 	Vault         string `mapstructure:"vault_name" json:"vault_name"`         // subdir within home to indicate alias of different vaults (addresses)
 	AddressPrefix string `mapstructure:"address_prefix" json:"address_prefix"` //
 
-	Threshold    int
-	Parties      int
-	NewThreshold int `mapstructure:"new_threshold" json:"-"`
-	NewParties   int `mapstructure:"new_parties" json:"-"`
+	Threshold    int `mapstructure:"threshold" json:"threshold"`
+	Parties      int `mapstructure:"parties" json:"parties"`
+	NewThreshold int `mapstructure:"new_threshold" json:"new_threshold"`
+	NewParties   int `mapstructure:"new_parties" json:"new_parties"`
 
 	LogLevel    string `mapstructure:"log_level" json:"log_level"`
 	ProfileAddr string `mapstructure:"profile_addr" json:"profile_addr"`

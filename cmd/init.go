@@ -187,12 +187,6 @@ func setListenAddr() {
 		return
 	}
 
-	listenPort := viper.GetString("listen_port")
-	if listenPort != "" {
-		common.TssCfg.ListenAddr = fmt.Sprintf("/ip4/0.0.0.0/tcp/%s", listenPort)
-		return
-	}
-
 	port, err := freeport.GetFreePort()
 	if err != nil {
 		common.Panic(err)
