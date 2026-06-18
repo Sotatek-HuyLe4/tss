@@ -330,16 +330,16 @@ go build -o tss
 
 # 1. Init 3 parties
 ./tss init --home .tss/node1 --vault_name "alice" \
-  --moniker "node1" --password "123456789" \ 
-  --p2p.new_listen "/ip4/0.0.0.0/tcp/10000"
+  --moniker "node1" --password "123456789" \
+  --p2p.listen "/ip4/0.0.0.0/tcp/10000"
 
 ./tss init --home .tss/node2 --vault_name "alice" \
   --moniker "node2" --password "123456789" \
-  --p2p.new_listen "/ip4/0.0.0.0/tcp/20000"
+  --p2p.listen "/ip4/0.0.0.0/tcp/20000"
 
 ./tss init --home .tss/node3 --vault_name "alice" \
   --moniker "node3" --password "123456789" \
-  --p2p.new_listen "/ip4/0.0.0.0/tcp/30000"
+  --p2p.listen "/ip4/0.0.0.0/tcp/30000"
 
 # 2. Channel
 ./tss channel --channel_expire 30
@@ -382,7 +382,7 @@ go build -o tss
 
 ./tss init --home .tss/node4 --vault_name "alice" \
   --moniker "node4" --password "123456789" \
-  --p2p.new_listen "/ip4/0.0.0.0/tcp/40000"
+  --p2p.listen "/ip4/0.0.0.0/tcp/40000"
 ./tss regroup --home .tss/node4 --vault_name "alice" --password "123456789" \
   --new_parties 3 --new_threshold 1 --parties 3 --threshold 1 \
   --channel_password "123456789" --channel_id "<CHANNEL_ID>" \
