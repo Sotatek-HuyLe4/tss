@@ -11,6 +11,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/mitchellh/mapstructure"
 	"github.com/multiformats/go-multiaddr"
 	"github.com/spf13/viper"
@@ -74,31 +75,38 @@ func DefaultKDFConfig() KDFConfig {
 	}
 }
 
+type SignConfig struct {
+	Tx     *types.Transaction `json:"tx"`
+	Signer types.Signer       `json:"signer"`
+}
+
 type TssConfig struct {
 	P2PConfig `mapstructure:"p2p" json:"p2p"`
 	KDFConfig `mapstructure:"kdf" json:"-"` // kdf config will be persistent together with cryptoJSON,
 	// no need to keep it in config file
 
+	SignConfig SignConfig `json:"sign_config"`
+
 	Id            TssClientId
 	Moniker       string
-	Vault         string `mapstructure:"vault_name" json:"vault_name"` // subdir within home to indicate alias of different vaults (addresses)
-	AddressPrefix string `mapstructure:"address_prefix" json:"-"`      //
+	Vault         string `mapstructure:"vault_name" json:"vault_name"`         // subdir within home to indicate alias of different vaults (addresses)
+	AddressPrefix string `mapstructure:"address_prefix" json:"address_prefix"` //
 
-	Threshold    int
-	Parties      int
-	NewThreshold int `mapstructure:"new_threshold" json:"-"`
-	NewParties   int `mapstructure:"new_parties" json:"-"`
+	Threshold    int `mapstructure:"threshold" json:"threshold"`
+	Parties      int `mapstructure:"parties" json:"parties"`
+	NewThreshold int `mapstructure:"new_threshold" json:"new_threshold"`
+	NewParties   int `mapstructure:"new_parties" json:"new_parties"`
 
 	LogLevel    string `mapstructure:"log_level" json:"log_level"`
 	ProfileAddr string `mapstructure:"profile_addr" json:"profile_addr"`
-	Password    string `json:"-"`
-	Message     string `json:"-"` // string represented big.Int, will refactor later
+	Password    string `json:"password"`
+	Message     string `json:"message"` // string represented big.Int, will refactor later
 
-	ChannelId       string `mapstructure:"channel_id" json:"-"`
-	ChannelPassword string `mapstructure:"channel_password" json:"-"`
+	ChannelId       string `mapstructure:"channel_id" json:"channel_id"`
+	ChannelPassword string `mapstructure:"channel_password" json:"channel_password"`
 
-	IsOldCommittee bool          `mapstructure:"is_old" json:"-"`
-	IsNewCommittee bool          `mapstructure:"is_new_member" json:"-"`
+	IsOldCommittee bool          `mapstructure:"is_old" json:"is_old"`
+	IsNewCommittee bool          `mapstructure:"is_new_member" json:"is_new_member"`
 	BMode          BootstrapMode `json:"mode"`
 
 	Pubkey string `mapstructure:"pubkey" json:"pubkey"`
@@ -184,4 +192,12 @@ func ReadConfigFromHome(v *viper.Viper, init bool, home, vault, passphrase strin
 
 	TssCfg = config
 	return nil
+}
+
+func PrintConfig(config TssConfig) {
+	jsonConfig, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		Panic(err)
+	}
+	fmt.Printf("config: %s\n", string(jsonConfig))
 }

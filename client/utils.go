@@ -11,12 +11,16 @@ import (
 	"github.com/bnb-chain/tss-lib/v2/crypto/paillier"
 	"github.com/bnb-chain/tss-lib/v2/ecdsa/keygen"
 	"github.com/bnb-chain/tss-lib/v2/tss"
+	"github.com/bnb-chain/tss/common"
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcutil/bech32"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ripemd160"
 
-	"github.com/bnb-chain/tss/common"
+	tsscommon "github.com/bnb-chain/tss-lib/v2/common"
+	evmCommon "github.com/ethereum/go-ethereum/common"
+	evmCrypto "github.com/ethereum/go-ethereum/crypto"
 )
 
 func loadSavedKeyForSign(config *common.TssConfig, sortedIds tss.SortedPartyIDs, signers map[string]int) keygen.LocalPartySaveData {
@@ -27,6 +31,7 @@ func loadSavedKeyForSign(config *common.TssConfig, sortedIds tss.SortedPartyIDs,
 	filteredH1j := make([]*big.Int, 0)
 	filteredH2j := make([]*big.Int, 0)
 	filteredKs := make([]*big.Int, 0)
+
 	for _, partyId := range sortedIds {
 		keygenIdx := signers[partyId.Moniker]
 		filteredBigXj = append(filteredBigXj, result.BigXj[keygenIdx])
@@ -36,6 +41,7 @@ func loadSavedKeyForSign(config *common.TssConfig, sortedIds tss.SortedPartyIDs,
 		filteredH2j = append(filteredH2j, result.H2j[keygenIdx])
 		filteredKs = append(filteredKs, result.Ks[keygenIdx])
 	}
+
 	filteredResult := keygen.LocalPartySaveData{
 		LocalPreParams: keygen.LocalPreParams{
 			PaillierSK: result.PaillierSK,
@@ -82,6 +88,7 @@ func loadSavedKey(config *common.TssConfig) keygen.LocalPartySaveData {
 		common.Panic(err)
 	}
 	defer wPriv.Close()
+
 	wPub, err := os.OpenFile(path.Join(config.Home, config.Vault, "pk.json"), os.O_RDONLY, 0400)
 	if err != nil {
 		common.Panic(err)
@@ -92,6 +99,7 @@ func loadSavedKey(config *common.TssConfig) keygen.LocalPartySaveData {
 	if err != nil {
 		common.Panic(err)
 	}
+
 	return *result
 }
 
@@ -136,4 +144,44 @@ func GetAddress(key ecdsa.PublicKey, prefix string) (string, error) {
 		return "", errors.Wrap(err, "encoding bech32 failed")
 	}
 	return bech32.Encode(prefix, converted)
+}
+
+func GetEvmAddress(pubkey ecdsa.PublicKey) string {
+	address := evmCrypto.PubkeyToAddress(pubkey)
+
+	return address.Hex()
+}
+
+func AssembleSignedTx(
+	tx *types.Transaction,
+	signer types.Signer,
+	sigData *tsscommon.SignatureData,
+) (*types.Transaction, evmCommon.Address) {
+	sig := make([]byte, 65)
+	copy(sig[0:32], padTo32(sigData.R))
+	copy(sig[32:64], padTo32(sigData.S))
+	sig[64] = sigData.SignatureRecovery[0]
+
+	signedTx, err := tx.WithSignature(signer, sig)
+	if err != nil {
+		common.Panic(err)
+	}
+
+	sender, err := types.Sender(signer, signedTx)
+	if err != nil {
+		common.Panic(err)
+	}
+
+	return signedTx, sender
+}
+
+func padTo32(b []byte) []byte {
+	if len(b) >= 32 {
+		return b[len(b)-32:]
+	}
+
+	out := make([]byte, 32)
+	copy(out[32-len(b):], b)
+
+	return out
 }

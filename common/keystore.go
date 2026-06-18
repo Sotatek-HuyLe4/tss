@@ -246,7 +246,7 @@ func LoadEcdsaPubkey(home, vault, passphrase string) (*ecdsa.PublicKey, error) {
 		return nil, err
 	}
 
-	return &ecdsa.PublicKey{tss.EC(), pFields.ECDSAPub.X(), pFields.ECDSAPub.Y()}, nil
+	return &ecdsa.PublicKey{Curve: pFields.ECDSAPub.Curve(), X: pFields.ECDSAPub.X(), Y: pFields.ECDSAPub.Y()}, nil
 }
 
 func LoadConfig(home, vault, passphrase string) (*TssConfig, error) {

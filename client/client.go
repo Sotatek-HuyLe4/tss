@@ -3,22 +3,23 @@ package client
 import (
 	"crypto/ecdsa"
 	"fmt"
-	"github.com/ipfs/go-log"
 	"math/big"
 	"os"
 	"path"
 	"strconv"
 	"time"
 
-	lib "github.com/bnb-chain/tss-lib/v2/common"
 	"github.com/bnb-chain/tss-lib/v2/ecdsa/keygen"
 	"github.com/bnb-chain/tss-lib/v2/ecdsa/resharing"
 	"github.com/bnb-chain/tss-lib/v2/tss"
-	"github.com/btcsuite/btcd/btcec"
-	"google.golang.org/protobuf/proto"
-
 	"github.com/bnb-chain/tss/common"
 	"github.com/bnb-chain/tss/p2p"
+	"github.com/ipfs/go-log"
+	"google.golang.org/protobuf/proto"
+
+	lib "github.com/bnb-chain/tss-lib/v2/common"
+	tsscommon "github.com/bnb-chain/tss-lib/v2/common"
+	ethCommon "github.com/ethereum/go-ethereum/common"
 )
 
 var Logger = log.Logger("tss")
@@ -54,7 +55,7 @@ type TssClient struct {
 	regroupParams *tss.ReSharingParameters
 	idToPartyIds  map[string]*tss.PartyID
 	key           *keygen.LocalPartySaveData
-	signature     []byte
+	signature     tsscommon.SignatureData
 
 	saveCh chan keygen.LocalPartySaveData
 	signCh chan lib.SignatureData
@@ -87,6 +88,7 @@ func NewTssClient(config *common.TssConfig, mode ClientMode, mock bool) *TssClie
 		if mode == RegroupMode {
 			common.TssCfg.BMode = common.RegroupMode
 		}
+
 		bootstrapper := common.NewBootstrapper(0, &common.TssCfg)
 		t := p2p.NewP2PTransporter(config.Home, config.Vault, config.Id.String(), bootstrapper, nil, nil, signers, &config.P2PConfig)
 		t.Shutdown()
@@ -104,6 +106,7 @@ func NewTssClient(config *common.TssConfig, mode ClientMode, mock bool) *TssClie
 					}
 				}
 			}
+
 			return true
 		})
 		if mode == SignMode || (mode == RegroupMode && common.TssCfg.IsOldCommittee) {
@@ -113,7 +116,8 @@ func NewTssClient(config *common.TssConfig, mode ClientMode, mock bool) *TssClie
 		if len(signers) < config.Threshold+1 {
 			common.Panic(fmt.Errorf("no enough signers (%d) to meet requirement: %d", len(signers), config.Threshold+1))
 		}
-		updatePeerOriginalIndexes(config, bootstrapper, partyID, signers)
+
+		updatePeerOriginalIndexes(config, partyID, signers)
 	}
 
 	if !mock {
@@ -133,6 +137,7 @@ func NewTssClient(config *common.TssConfig, mode ClientMode, mock bool) *TssClie
 			idToPartyIds[id] = partyId
 			unsortedPartyIds = append(unsortedPartyIds, partyId)
 		}
+
 		if mode == RegroupMode {
 			for _, peer := range config.P2PConfig.ExpectedNewPeers {
 				id := string(p2p.GetClientIdFromExpectedPeers(peer))
@@ -147,6 +152,7 @@ func NewTssClient(config *common.TssConfig, mode ClientMode, mock bool) *TssClie
 					unsortedNewPartyIds = append(unsortedNewPartyIds, partyId)
 				}
 			}
+
 			if !config.IsOldCommittee {
 				unsortedNewPartyIds = append(unsortedNewPartyIds, partyID)
 			}
@@ -161,6 +167,7 @@ func NewTssClient(config *common.TssConfig, mode ClientMode, mock bool) *TssClie
 			}
 		}
 	}
+
 	sortedIds := tss.SortPartyIDs(unsortedPartyIds)
 	p2pCtx := tss.NewPeerContext(sortedIds)
 	saveCh := make(chan keygen.LocalPartySaveData)
@@ -178,28 +185,31 @@ func NewTssClient(config *common.TssConfig, mode ClientMode, mock bool) *TssClie
 	}
 
 	var localParty tss.Party
-	if mode == KeygenMode {
-		params := tss.NewParameters(tss.EC(), p2pCtx, partyID, config.Parties, config.Threshold)
+	switch mode {
+	case KeygenMode:
+		params := tss.NewParameters(tss.S256(), p2pCtx, partyID, config.Parties, config.Threshold)
 		localParty = keygen.NewLocalParty(params, sendCh, saveCh)
 		c.localParty = localParty
 		Logger.Infof("[%s] initialized localParty: %s", config.Moniker, localParty)
-	} else if mode == SignMode {
+	case SignMode:
 		key := loadSavedKeyForSign(config, sortedIds, signers)
-		pubKey := btcec.PublicKey(ecdsa.PublicKey{tss.EC(), key.ECDSAPub.X(), key.ECDSAPub.Y()})
-		Logger.Infof("[%s] public key: %X\n", config.Moniker, pubKey.SerializeCompressed())
-		address, err := GetAddress(ecdsa.PublicKey{tss.EC(), key.ECDSAPub.X(), key.ECDSAPub.Y()}, config.AddressPrefix)
-		if err != nil {
-			panic(err)
+		pubKey := ecdsa.PublicKey{
+			Curve: key.ECDSAPub.Curve(),
+			X:     key.ECDSAPub.X(),
+			Y:     key.ECDSAPub.Y(),
 		}
-		Logger.Debugf("[%s] address is: %s\n", config.Moniker, address)
-		params := tss.NewParameters(tss.EC(), p2pCtx, partyID, config.Parties, config.Threshold)
+
+		address := GetEvmAddress(pubKey)
+		Logger.Infof("[%s] evm address is: %s\n", config.Moniker, address)
+
+		params := tss.NewParameters(tss.S256(), p2pCtx, partyID, config.Parties, config.Threshold)
 		c.key = &key
 		c.params = params
-	} else if mode == RegroupMode {
+	case RegroupMode:
 		sortedNewIds := tss.SortPartyIDs(unsortedNewPartyIds)
 		newP2pCtx := tss.NewPeerContext(sortedNewIds)
 		params := tss.NewReSharingParameters(
-			tss.EC(),
+			tss.S256(),
 			p2pCtx,
 			newP2pCtx,
 			partyID,
@@ -242,10 +252,9 @@ func NewTssClient(config *common.TssConfig, mode ClientMode, mock bool) *TssClie
 func (client *TssClient) Start() {
 	switch client.mode {
 	case SignMode:
-		message, ok := big.NewInt(0).SetString(client.config.Message, 10)
-		if !ok {
-			common.Panic(fmt.Errorf("message to be sign: %s is not a valid big.Int", client.config.Message))
-		}
+		txHash := ethCommon.HexToHash(client.config.Message)
+		message := new(big.Int).SetBytes(txHash.Bytes())
+
 		client.signImpl(message)
 		time.Sleep(5 * time.Second)
 	default:
@@ -325,23 +334,31 @@ func (client *TssClient) saveDataRoutine(saveCh <-chan keygen.LocalPartySaveData
 			}
 		}
 
-		address, err := GetAddress(ecdsa.PublicKey{tss.EC(), msg.ECDSAPub.X(), msg.ECDSAPub.Y()}, client.config.AddressPrefix)
-		if err != nil {
-			Logger.Errorf("[%s] failed to generate address from public key :%v", client.config.Moniker, err)
-		} else {
-			Logger.Infof("[%s] bech32 address is: %s", client.config.Moniker, address)
+		pubkey := ecdsa.PublicKey{
+			Curve: msg.ECDSAPub.Curve(),
+			X:     msg.ECDSAPub.X(),
+			Y:     msg.ECDSAPub.Y(),
 		}
+		address := GetEvmAddress(pubkey)
+		// if err != nil {
+		// 	Logger.Errorf("[%s] failed to generate address from public key :%v", client.config.Moniker, err)
+		// } else {
+		// 	Logger.Infof("[%s] bech32 address is: %s", client.config.Moniker, address)
+		// }
+		Logger.Infof("[%s] evm address is: %s", client.config.Moniker, address)
 
 		wPriv, err := os.OpenFile(path.Join(client.config.Home, client.config.Vault, "sk.json"), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 		if err != nil {
 			common.Panic(err)
 		}
 		defer wPriv.Close() // defer within loop is fine here as for one party there would be only one element from saveCh
+
 		wPub, err := os.OpenFile(path.Join(client.config.Home, client.config.Vault, "pk.json"), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 		if err != nil {
 			common.Panic(err)
 		}
 		defer wPub.Close() // defer within loop is fine here as for one party there would be only one element from saveCh
+
 		err = common.Save(&msg, client.transporter.NodeKey(), client.config.KDFConfig, client.config.Password, wPriv, wPub)
 		if err != nil {
 			common.Panic(err)
@@ -351,23 +368,23 @@ func (client *TssClient) saveDataRoutine(saveCh <-chan keygen.LocalPartySaveData
 			done <- true
 			close(done)
 		}
-		break
 	}
 }
 
 func (client *TssClient) saveSignatureRoutine(signCh <-chan lib.SignatureData, done chan<- bool) {
 	for signature := range signCh {
-		client.signature = signature.Signature
+		client.signature = signature
 		if done != nil {
 			done <- true
 			close(done)
 		}
+
 		break
 	}
 }
 
 // assign original keygen index to signers (old parties in regroup)
-func updatePeerOriginalIndexes(config *common.TssConfig, bootstrapper *common.Bootstrapper, partyID *tss.PartyID, signers map[string]int) {
+func updatePeerOriginalIndexes(config *common.TssConfig, partyID *tss.PartyID, signers map[string]int) {
 	allPartyIds := make(tss.UnSortedPartyIDs, 0, config.Parties) // all parties, used for calculating party's index during keygen
 	allPartyIds = append(allPartyIds, partyID)
 	for _, peer := range config.P2PConfig.ExpectedPeers {

@@ -7,10 +7,6 @@ import (
 	"encoding/gob"
 	"encoding/hex"
 	"fmt"
-	"github.com/ipfs/go-datastore"
-	"github.com/libp2p/go-libp2p"
-	"github.com/libp2p/go-yamux"
-	"github.com/multiformats/go-multiaddr"
 	"io/ioutil"
 	"os"
 	"path"
@@ -20,21 +16,25 @@ import (
 	"time"
 
 	"github.com/bnb-chain/tss-lib/v2/tss"
-	relay "github.com/libp2p/go-libp2p-circuit"
-	ifconnmgr "github.com/libp2p/go-libp2p-core/connmgr"
+	"github.com/bnb-chain/tss/common"
+	"github.com/ipfs/go-datastore"
+	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p-core/crypto"
 	"github.com/libp2p/go-libp2p-core/host"
 	"github.com/libp2p/go-libp2p-core/network"
 	"github.com/libp2p/go-libp2p-core/peer"
 	"github.com/libp2p/go-libp2p-core/peerstore"
 	"github.com/libp2p/go-libp2p-core/protocol"
-	libp2pdht "github.com/libp2p/go-libp2p-kad-dht"
-	opts "github.com/libp2p/go-libp2p-kad-dht/opts"
 	"github.com/libp2p/go-libp2p-peerstore/pstoremem"
-	swarm "github.com/libp2p/go-libp2p-swarm"
+	"github.com/libp2p/go-yamux"
+	"github.com/multiformats/go-multiaddr"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/bnb-chain/tss/common"
+	relay "github.com/libp2p/go-libp2p-circuit"
+	ifconnmgr "github.com/libp2p/go-libp2p-core/connmgr"
+	libp2pdht "github.com/libp2p/go-libp2p-kad-dht"
+	opts "github.com/libp2p/go-libp2p-kad-dht/opts"
+	swarm "github.com/libp2p/go-libp2p-swarm"
 )
 
 const (
@@ -115,6 +115,10 @@ func NewP2PTransporter(
 	ps := pstoremem.NewPeerstore()
 	t.setExpectedPeers(nodeId, signers, ps, config) // t.expectedPeers will be updated in this method
 	t.bootstrapPeers = config.BootstrapPeers
+
+	fmt.Printf("Bootstrap Peers: %v\n", config.BootstrapPeers)
+	fmt.Printf("Relay Peers: %v\n", config.RelayPeers)
+
 	// TODO: relay addr need further confirm
 	// The correct address should be /p2p-circuit/p2p/<dest ID> rather than /p2p-circuit/p2p/<relay ID>
 	for _, relayPeerAddr := range config.RelayPeers {

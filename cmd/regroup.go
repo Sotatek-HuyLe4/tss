@@ -9,12 +9,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-
 	"github.com/bnb-chain/tss/client"
 	"github.com/bnb-chain/tss/common"
 	"github.com/bnb-chain/tss/p2p"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 func init() {
@@ -31,6 +30,7 @@ var regroupCmd = &cobra.Command{
 		if err := common.ReadConfigFromHome(viper.GetViper(), false, viper.GetString(flagHome), vault, passphrase); err != nil {
 			common.Panic(err)
 		}
+
 		initLogLevel(common.TssCfg)
 	},
 	Run: func(cmd *cobra.Command, args []string) {
@@ -89,6 +89,7 @@ var regroupCmd = &cobra.Command{
 
 			setChannelId()
 			setChannelPasswd()
+
 			tssRegroup = exec.Command(
 				path.Join(pwd, "tss"),
 				"regroup",
@@ -135,6 +136,7 @@ var regroupCmd = &cobra.Command{
 				moniker = strings.TrimSuffix(moniker, common.RegroupSuffix)
 				originExpectedNewPeers = append(originExpectedNewPeers, fmt.Sprintf("%s@%s", moniker, id))
 			}
+
 			common.TssCfg.ExpectedPeers = originExpectedNewPeers
 			common.TssCfg.PeerAddrs = make([]string, len(common.TssCfg.NewPeerAddrs))
 			copy(common.TssCfg.PeerAddrs, common.TssCfg.NewPeerAddrs)
@@ -179,10 +181,6 @@ var regroupCmd = &cobra.Command{
 				client.Logger.Error(err)
 			}
 			client.Logger.Info("secret share and configuration has been updated")
-		}
-
-		if mustNew {
-			addToBnbcli(c.PubKey())
 		}
 	},
 }
