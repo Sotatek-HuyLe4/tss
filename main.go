@@ -1,16 +1,17 @@
 package main
 
 import (
-	"github.com/bnb-chain/tss/cmd"
-	"log"
-	"net/http"
 	_ "net/http/pprof"
+
+	httpserver "github.com/bnb-chain/tss/http-server"
 )
 
 func main() {
-	go func() {
-		log.Println(http.ListenAndServe("localhost:6062", nil))
-	}()
+	// go func() {
+	// 	log.Println(http.ListenAndServe("localhost:6062", nil))
+	// }()
 
-	cmd.Execute()
+	// cmd.Execute()
+
+	httpserver.StartServer()
 }

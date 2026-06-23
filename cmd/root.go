@@ -4,13 +4,11 @@ import (
 	"os"
 	"path"
 
-	"github.com/ipfs/go-log"
-
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-
 	"github.com/bnb-chain/tss/client"
 	"github.com/bnb-chain/tss/common"
+	"github.com/ipfs/go-log"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 const (
