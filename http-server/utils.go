@@ -6,13 +6,18 @@ import (
 	"github.com/spf13/viper"
 )
 
-func initConfigs() {
-	// bind p2p configs
-	viper.Set("p2p.listen", "")
-	viper.Set("p2p.new_listen", "")
-	viper.Set("p2p.peer_addrs", []string{})
-	viper.Set("p2p.new_peer_addrs", []string{})
-	viper.Set("p2p.broadcast_sanity_check", true)
+func initCommonViper() {
+	viper.Set("vault_name", "")
+	viper.Set("password", "")
+	viper.Set("log_level", "info")
+}
+
+func initNodeViper(home, vault, moniker, password, listenAddress string) {
+	viper.Set("home", home)
+	viper.Set("vault_name", vault)
+	viper.Set("moniker", moniker)
+	viper.Set("password", password)
+	viper.Set("p2p.listen", listenAddress)
 
 	// bind kdf configs
 	viper.Set("kdf.memory", 65536)
@@ -20,28 +25,6 @@ func initConfigs() {
 	viper.Set("kdf.parallelism", 4)
 	viper.Set("kdf.salt_length", 16)
 	viper.Set("kdf.key_length", 48)
-
-	// bind client configs
-	viper.Set("moniker", "")
-	viper.Set("vault_name", "")
-	viper.Set("threshold", 0)
-	viper.Set("parties", 0)
-	viper.Set("new_threshold", 0)
-	viper.Set("new_parties", 0)
-	viper.Set("password", "")
-	viper.Set("message", "")
-	viper.Set("log_level", "info")
-	viper.Set("channel_id", "")
-	viper.Set("channel_password", "")
-	viper.Set("channel_expire", 0)
-	viper.Set("is_old", false)
-	viper.Set("is_new_member", false)
-	viper.Set("pubkey", "")
-
-	// bind sign configs
-	viper.Set("rpc_url", "http://localhost:8545")
-	viper.Set("to_address", "")
-	viper.Set("amount", "1")
 }
 
 func initLogLevel(cfg common.TssConfig) {

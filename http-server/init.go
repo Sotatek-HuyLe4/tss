@@ -18,10 +18,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-const (
-	HOME_DIR = ".tss"
-)
-
 type InitRequest struct {
 	Home          string `form:"home" json:"home" xml:"home" binding:"required"`
 	Vault         string `form:"vault" json:"vault" xml:"vault" binding:"required"`
@@ -69,7 +65,7 @@ func initNode(ctx *gin.Context) {
 
 	// prepare for init node
 	home := fmt.Sprintf("%s/%s", HOME_DIR, initRequest.Home)
-	initViper(home, initRequest.Vault, initRequest.Moniker, initRequest.Password, initRequest.ListenAddress)
+	initNodeViper(home, initRequest.Vault, initRequest.Moniker, initRequest.Password, initRequest.ListenAddress)
 
 	if err := makeHomeDir(home, initRequest.Vault); err != nil {
 		Error(ctx, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR", err.Error())
@@ -124,14 +120,6 @@ func initNode(ctx *gin.Context) {
 		"moniker":        common.TssCfg.Moniker,
 		"listen_address": common.TssCfg.ListenAddr,
 	})
-}
-
-func initViper(home, vault, moniker, password, listenAddress string) {
-	viper.Set("home", home)
-	viper.Set("vault_name", vault)
-	viper.Set("moniker", moniker)
-	viper.Set("password", password)
-	viper.Set("p2p.listen", listenAddress)
 }
 
 func makeHomeDir(home, vault string) error {

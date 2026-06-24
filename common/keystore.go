@@ -237,10 +237,12 @@ func LoadEcdsaPubkey(home, vault, passphrase string) (*ecdsa.PublicKey, error) {
 		return nil, err
 	}
 	defer rPub.Close()
+
 	plaintext, err := readAndDecrypt(rPub, passphrase)
 	if err != nil {
 		return nil, err
 	}
+
 	var pFields publicFields
 	if err := json.Unmarshal(plaintext, &pFields); err != nil {
 		return nil, err
@@ -254,14 +256,17 @@ func LoadConfig(home, vault, passphrase string) (*TssConfig, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	var sConfig secretConfig
 	if err := json.Unmarshal(sConfigBytes, &sConfig); err != nil {
 		return nil, err
 	}
+
 	plaintext, err := decryptSecret(*sConfig.SecretTssConfig, passphrase)
 	if err != nil {
 		return nil, err
 	}
+
 	var config TssConfig
 	if err := json.Unmarshal(plaintext, &config); err != nil {
 		return nil, err
@@ -274,6 +279,7 @@ func LoadConfig(home, vault, passphrase string) (*TssConfig, error) {
 
 		// assign kdf configs
 		config.KDFConfig = sConfig.SecretTssConfig.KDFParams
+
 		return &config, err
 	}
 }
