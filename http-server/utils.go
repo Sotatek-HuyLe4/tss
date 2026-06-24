@@ -27,6 +27,19 @@ func initNodeViper(home, vault, moniker, password, listenAddress string) {
 	viper.Set("kdf.key_length", 48)
 }
 
+func initKeygenViper(home, vault, password, channelId string, parties, threshold int) {
+	viper.Set("home", home)
+	viper.Set("vault_name", vault)
+	viper.Set("password", password)
+	viper.Set("parties", parties)
+	viper.Set("threshold", threshold)
+	viper.Set("channel_id", channelId)
+	viper.Set("channel_password", password)
+
+	viper.Set("p2p.peer_addrs", []string{})
+	viper.Set("p2p.broadcast_sanity_check", true)
+}
+
 func initLogLevel(cfg common.TssConfig) {
 	log.SetLogLevel("tss", cfg.LogLevel)
 	log.SetLogLevel("tss-lib", cfg.LogLevel)

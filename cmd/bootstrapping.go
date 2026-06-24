@@ -34,7 +34,7 @@ var bootstrapCmd = &cobra.Command{
 		if err != nil {
 			common.Panic(err)
 		}
-		listenAddrs := getListenAddrs(common.TssCfg.ListenAddr)
+		listenAddrs := GetListenAddrs(common.TssCfg.ListenAddr)
 		client.Logger.Debugf("This node is listening on: %v", listenAddrs)
 
 		setChannelId()
@@ -65,9 +65,9 @@ var bootstrapCmd = &cobra.Command{
 		}()
 
 		done := make(chan bool)
-		go acceptConnRoutine(listener, bootstrapper, done)
+		go AcceptConnRoutine(listener, bootstrapper, done)
 
-		peerAddrs := findPeerAddrsViaSsdp(numOfPeers, listenAddrs)
+		peerAddrs := FindPeerAddrsViaSsdp(numOfPeers, listenAddrs)
 		client.Logger.Infof("Found peers via ssdp: %v", peerAddrs)
 
 		go func() {
@@ -91,15 +91,15 @@ var bootstrapCmd = &cobra.Command{
 					}
 					client.Logger.Debugf("done dial: %s", peerAddr)
 					defer conn.Close()
-					handleConnection(conn, bootstrapper)
+					HandleConnection(conn, bootstrapper)
 				}(peerAddr)
 			}
 
-			checkReceivedPeerInfos(bootstrapper, done)
+			CheckReceivedPeerInfos(bootstrapper, done)
 		}()
 
 		<-done
-		err = updateConfigWithPeerInfos(bootstrapper)
+		err = UpdateConfigWithPeerInfos(bootstrapper)
 		if err != nil {
 			common.Panic(err)
 		}
@@ -139,7 +139,7 @@ func setChannelPasswd() {
 	}
 }
 
-func findPeerAddrsViaSsdp(n int, listenAddrs string) []string {
+func FindPeerAddrsViaSsdp(n int, listenAddrs string) []string {
 	if common.TssCfg.BMode == common.KeygenMode && len(common.TssCfg.PeerAddrs) == n {
 		return common.TssCfg.PeerAddrs
 	}
@@ -152,8 +152,10 @@ func findPeerAddrsViaSsdp(n int, listenAddrs string) []string {
 		moniker := p2p.GetMonikerFromExpectedPeers(peer)
 		existingMonikers[moniker] = struct{}{}
 	}
+
 	ssdpSrv := ssdp.NewSsdpService(common.TssCfg.Moniker, common.TssCfg.Vault, listenAddrs, n, existingMonikers)
 	ssdpSrv.CollectPeerAddrs()
+
 	var peerAddrs []string
 	ssdpSrv.PeerAddrs.Range(func(_, value interface{}) bool {
 		if peerAddr, ok := value.(string); ok {
@@ -161,10 +163,11 @@ func findPeerAddrsViaSsdp(n int, listenAddrs string) []string {
 		}
 		return true
 	})
+
 	return peerAddrs
 }
 
-func acceptConnRoutine(listener net.Listener, bootstrapper *common.Bootstrapper, done <-chan bool) {
+func AcceptConnRoutine(listener net.Listener, bootstrapper *common.Bootstrapper, done <-chan bool) {
 	for {
 		select {
 		case <-done:
@@ -175,17 +178,18 @@ func acceptConnRoutine(listener net.Listener, bootstrapper *common.Bootstrapper,
 				if !strings.Contains(err.Error(), "use of closed network connection") {
 					client.Logger.Errorf("Some connection error: %s\n", err)
 				}
+
 				continue
 			} else {
 				client.Logger.Debugf("%s connected to us!\n", conn.RemoteAddr().String())
 			}
 
-			handleConnection(conn, bootstrapper)
+			HandleConnection(conn, bootstrapper)
 		}
 	}
 }
 
-func handleConnection(conn net.Conn, b *common.Bootstrapper) {
+func HandleConnection(conn net.Conn, b *common.Bootstrapper) {
 	client.Logger.Debugf("handling connection from %s", conn.RemoteAddr().String())
 
 	sendBootstrapMessage(conn, b.Msg)
@@ -250,11 +254,12 @@ func readBootstrapMessage(conn net.Conn, b *common.Bootstrapper) {
 	}
 }
 
-func checkReceivedPeerInfos(bootstrapper *common.Bootstrapper, done chan<- bool) {
+func CheckReceivedPeerInfos(bootstrapper *common.Bootstrapper, done chan<- bool) {
 	for {
 		if bootstrapper.IsFinished() {
 			done <- true
 			close(done)
+
 			break
 		} else {
 			time.Sleep(time.Second)
@@ -262,7 +267,7 @@ func checkReceivedPeerInfos(bootstrapper *common.Bootstrapper, done chan<- bool)
 	}
 }
 
-func updateConfigWithPeerInfos(bootstrapper *common.Bootstrapper) error {
+func UpdateConfigWithPeerInfos(bootstrapper *common.Bootstrapper) error {
 	peerAddrs := make([]string, 0)
 	expectedPeers := make([]string, 0)
 
@@ -279,9 +284,11 @@ func updateConfigWithPeerInfos(bootstrapper *common.Bootstrapper) error {
 				newPeerAddrs = append(newPeerAddrs, pi.RemoteAddr)
 				expectedNewPeers = append(expectedNewPeers, fmt.Sprintf("%s@%s", pi.Moniker, pi.Id))
 			}
+
 			return true
 		} else {
 			err = fmt.Errorf("failed to parse peerInfo from received messages")
+
 			return false
 		}
 	})

@@ -15,7 +15,7 @@ import (
 	ethCommon "github.com/ethereum/go-ethereum/common"
 )
 
-func getListenAddrs(listenAddr string) string {
+func GetListenAddrs(listenAddr string) string {
 	addr, err := multiaddr.NewMultiaddr(listenAddr)
 	if err != nil {
 		common.Panic(err)
