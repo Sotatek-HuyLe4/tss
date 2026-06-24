@@ -2,6 +2,7 @@ package client
 
 import (
 	"crypto/ecdsa"
+	"encoding/hex"
 	"fmt"
 	"math/big"
 	"os"
@@ -56,12 +57,17 @@ type TssClient struct {
 	idToPartyIds  map[string]*tss.PartyID
 	key           *keygen.LocalPartySaveData
 	signature     tsscommon.SignatureData
+	rawTx         string
 
 	saveCh chan keygen.LocalPartySaveData
 	signCh chan lib.SignatureData
 	sendCh chan tss.Message
 
 	mode ClientMode
+}
+
+func (client *TssClient) GetRawTx() string {
+	return client.rawTx
 }
 
 func NewTssClient(config *common.TssConfig, mode ClientMode, mock bool) *TssClient {
@@ -255,7 +261,9 @@ func (client *TssClient) Start() {
 		txHash := ethCommon.HexToHash(client.config.Message)
 		message := new(big.Int).SetBytes(txHash.Bytes())
 
-		client.signImpl(message)
+		rawTx, _ := client.signImpl(message)
+		client.rawTx = hex.EncodeToString(rawTx)
+
 		time.Sleep(5 * time.Second)
 	default:
 		if err := client.localParty.Start(); err != nil {

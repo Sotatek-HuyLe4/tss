@@ -36,7 +36,7 @@ func GetListenAddrs(listenAddr string) string {
 	return builder.String()
 }
 
-func etherToWei(amount string) (*big.Int, error) {
+func EtherToWei(amount string) (*big.Int, error) {
 	// parse the amount as a float64
 	etherFloat, err := strconv.ParseFloat(amount, 64)
 	if err != nil {
@@ -53,7 +53,7 @@ func etherToWei(amount string) (*big.Int, error) {
 	return wei, nil
 }
 
-func buildTransferTx(
+func BuildTransferTx(
 	chainId *big.Int,
 	nonce uint64,
 	to ethCommon.Address,
@@ -76,6 +76,6 @@ func buildTransferTx(
 	return types.NewTx(txData)
 }
 
-func bigGwei(g int64) *big.Int {
+func BigGwei(g int64) *big.Int {
 	return new(big.Int).Mul(big.NewInt(g), big.NewInt(1000000000))
 }

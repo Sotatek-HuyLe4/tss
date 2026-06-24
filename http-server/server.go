@@ -21,6 +21,7 @@ func StartServer(port int) {
 	router.POST("/channel", genrateChannelId)
 	router.POST("/init", initNode)
 	router.POST("/keygen", keygen)
+	router.POST("/sign", sign)
 
 	router.Run("localhost:" + strconv.Itoa(port))
 }

@@ -40,6 +40,19 @@ func initKeygenViper(home, vault, password, channelId string, parties, threshold
 	viper.Set("p2p.broadcast_sanity_check", true)
 }
 
+func initSignViper(home, vault, password, channelId, rpcUrl, toAddress, amount string) {
+	viper.Set("home", home)
+	viper.Set("vault_name", vault)
+	viper.Set("password", password)
+	viper.Set("channel_id", channelId)
+	viper.Set("channel_password", password)
+	viper.Set("rpc_url", rpcUrl)
+	viper.Set("to_address", toAddress)
+	viper.Set("amount", amount)
+
+	viper.Set("p2p.broadcast_sanity_check", true)
+}
+
 func initLogLevel(cfg common.TssConfig) {
 	log.SetLogLevel("tss", cfg.LogLevel)
 	log.SetLogLevel("tss-lib", cfg.LogLevel)
