@@ -1,15 +1,16 @@
 package httpserver
 
 import (
+	"strconv"
+
 	"github.com/gin-gonic/gin"
 )
 
 const (
 	HOME_DIR = ".tss"
-	PORT     = "8000"
 )
 
-func StartServer() {
+func StartServer(port int) {
 	// set up gin server
 	router := gin.Default()
 
@@ -21,5 +22,5 @@ func StartServer() {
 	router.POST("/init", initNode)
 	router.POST("/keygen", keygen)
 
-	router.Run("localhost:" + PORT)
+	router.Run("localhost:" + strconv.Itoa(port))
 }
