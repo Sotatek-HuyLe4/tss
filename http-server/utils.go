@@ -7,12 +7,16 @@ import (
 )
 
 func initCommonViper() {
-	viper.Set("vault_name", "")
-	viper.Set("password", "")
 	viper.Set("log_level", "info")
 }
 
 func initNodeViper(home, vault, moniker, password, listenAddress string) {
+	// reset viper
+	viper.Reset()
+
+	// init common viper
+	initCommonViper()
+
 	viper.Set("home", home)
 	viper.Set("vault_name", vault)
 	viper.Set("moniker", moniker)
@@ -28,6 +32,12 @@ func initNodeViper(home, vault, moniker, password, listenAddress string) {
 }
 
 func initKeygenViper(home, vault, password, channelId string, parties, threshold int) {
+	// reset viper
+	viper.Reset()
+
+	// init common viper
+	initCommonViper()
+
 	viper.Set("home", home)
 	viper.Set("vault_name", vault)
 	viper.Set("password", password)
@@ -41,6 +51,12 @@ func initKeygenViper(home, vault, password, channelId string, parties, threshold
 }
 
 func initSignViper(home, vault, password, channelId, rpcUrl, toAddress, amount string) {
+	// reset viper
+	viper.Reset()
+
+	// init common viper
+	initCommonViper()
+
 	viper.Set("home", home)
 	viper.Set("vault_name", vault)
 	viper.Set("password", password)

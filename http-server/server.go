@@ -14,9 +14,6 @@ func StartServer(port int) {
 	// set up gin server
 	router := gin.Default()
 
-	// init common viper
-	initCommonViper()
-
 	// router paths
 	router.POST("/channel", genrateChannelId)
 	router.POST("/init", initNode)

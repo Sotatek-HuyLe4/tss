@@ -264,7 +264,6 @@ func (client *TssClient) Start() {
 		rawTx, _ := client.signImpl(message)
 		client.rawTx = hex.EncodeToString(rawTx)
 
-		time.Sleep(5 * time.Second)
 	default:
 		if err := client.localParty.Start(); err != nil {
 			common.Panic(err)
@@ -276,6 +275,9 @@ func (client *TssClient) Start() {
 		go client.handleMessageRoutine()
 		<-done
 	}
+
+	// shutdown the transporter
+	client.transporter.Shutdown()
 }
 
 func (client *TssClient) handleMessageRoutine() {
