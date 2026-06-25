@@ -47,7 +47,7 @@ func setMessage() {
 	rpcUrl := viper.GetString("rpc_url")
 	toAddress := viper.GetString("to_address")
 	amount := viper.GetString("amount")
-	wei, err := etherToWei(amount)
+	wei, err := EtherToWei(amount)
 	if err != nil {
 		common.Panic(err)
 	}
@@ -81,7 +81,7 @@ func setMessage() {
 	}
 
 	// build the transfer tx
-	tx := buildTransferTx(chainId, nonce, ethCommon.HexToAddress(toAddress), wei, 21000, bigGwei(2), bigGwei(30))
+	tx := BuildTransferTx(chainId, nonce, ethCommon.HexToAddress(toAddress), wei, 21000, BigGwei(2), BigGwei(30))
 
 	// get the signer type
 	signer := types.NewLondonSigner(chainId)

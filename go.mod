@@ -8,6 +8,7 @@ require (
 	github.com/btcsuite/btcd v0.20.1-beta
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
 	github.com/ethereum/go-ethereum v1.13.15
+	github.com/gin-gonic/gin v1.4.0
 	github.com/ipfs/go-cid v0.0.3 // indirect
 	github.com/ipfs/go-datastore v0.0.5
 	github.com/ipfs/go-ds-leveldb v0.0.1
@@ -44,4 +45,7 @@ require (
 	google.golang.org/protobuf v1.27.1
 )
 
-replace github.com/btcsuite/btcd => github.com/btcsuite/btcd v0.22.3
+replace (
+	github.com/btcsuite/btcd => github.com/btcsuite/btcd v0.22.3
+	github.com/ugorji/go => github.com/ugorji/go/codec v1.2.12
+)

@@ -124,10 +124,12 @@ func ReadConfigFromHome(v *viper.Viper, init bool, home, vault, passphrase strin
 	} else if err != nil {
 		return fmt.Errorf("cannot use vault, error: %v", err)
 	}
+
 	marshaled, err := json.Marshal(cfg)
 	if err != nil {
 		return err
 	}
+
 	v.SetConfigType("json")
 	err = v.MergeConfig(bytes.NewReader(marshaled))
 	if err != nil {
@@ -144,10 +146,13 @@ func ReadConfigFromHome(v *viper.Viper, init bool, home, vault, passphrase strin
 					if err != nil {
 						return nil, err
 					}
+
 					al = append(al, addr)
 				}
+
 				return al, nil
 			}
+
 			if from.Kind() == reflect.Slice && from.Elem().Kind() == reflect.Interface && to == reflect.TypeOf(addrList{}) {
 				var al addrList
 				for _, value := range data.([]interface{}) {
@@ -157,14 +162,17 @@ func ReadConfigFromHome(v *viper.Viper, init bool, home, vault, passphrase strin
 					}
 					al = append(al, addr)
 				}
+
 				return al, nil
 			}
+
 			return data, nil
 		}
 	})
 	if err != nil {
 		return err
 	}
+
 	// override kdfconfig with loaded kdf config rather than command line ones (because after init, kdf configs are not bound)
 	// TODO: exclude KDFConfig from TssConfig
 	if cfg != nil {
